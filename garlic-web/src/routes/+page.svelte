@@ -84,7 +84,7 @@
         const c = document.querySelector('canvas');
         ctx = c.getContext('2d');
         ctx.imageSmoothingEnabled = false;
-        // ctx.translate(0.5, 0.5);
+        ctx.translate(-0.5, -0.5);
         c.addEventListener("mousemove", function (e) {
             findxy('move', e)
         }, false);
@@ -112,20 +112,22 @@
             for (let i = 0; i < dist; i += 3) {
               const x = prevX + (Math.sin(angle) * i);
               const y = prevY + (Math.cos(angle) * i);
+              send_buffer.push(parseInt(x));
+              send_buffer.push(parseInt(y));
               ctx.drawImage(brush_image, Math.round(x - line_width / 2), Math.round(y - line_width / 2))
-              const r = line_width / 2;
-                for (let x_c = -r; x_c < r; x_c++) {
-                  for (let y_c = -r; y_c < r; y_c++) {
-                    let distance = Math.sqrt(x_c*x_c + y_c*y_c);
-
-                    if (distance > r) {
-                      // skip all (x,y) coordinates that are outside of the circle
-                      continue;
-                    }
-                      send_buffer.push(x + x_c);
-                      send_buffer.push(y + y_c);
-                  }
-              }
+              // const r = line_width / 2;
+              //   for (let x_c = -r; x_c < r; x_c++) {
+              //     for (let y_c = -r; y_c < r; y_c++) {
+              //       let distance = Math.sqrt(x_c*x_c + y_c*y_c);
+              //
+              //       if (distance > r) {
+              //         // skip all (x,y) coordinates that are outside of the circle
+              //         continue;
+              //       }
+              //         // send_buffer.push(x + x_c);
+              //         // send_buffer.push(y + y_c);
+              //     }
+              // }
             }
             const c = colors[selected_color];
             ctx.strokeStyle = rgbString(c);
@@ -172,10 +174,10 @@
         }
         setInterval(async () => {
             if (send_buffer.length >= 2) {
-                await socket.send(send_buffer.join(" "));
+                await socket.send(send_buffer.join(" ") + " " + line_width);
                 send_buffer.length = 0;
             }
-        }, 100);
+        }, 200);
         socket.onopen = function (event) {
             // socket.send("test");
         }
@@ -197,5 +199,11 @@
 <style>
     canvas {
         border: 1px solid black;
+        image-rendering: optimizeSpeed;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: -o-crisp-edges;
+        image-rendering: optimize-contrast;
+        -ms-interpolation-mode: nearest-neighbor;
     }
 </style>

@@ -183,16 +183,56 @@ pub(crate) async fn ws_handler(ws: warp::ws::Ws, game_data: Arc<RwLock<Game>>, c
     Ok(ws.on_upgrade(move |socket| client_connection(socket, clients, game_data)))
 }
 
+#[inline]
+fn distance_between(point1_x: i32, point2_x: i32, point1_y: i32, point2_y: i32) -> usize {
+    ((((point2_x - point1_x).pow(2) + (point2_y - point1_y).pow(2)) as f32).sqrt() + 0.5) as usize
+}
+
+#[inline]
+fn angle_between(point1_x: i32, point2_x: i32, point1_y: i32, point2_y: i32) -> f32 {
+    ((point2_x - point1_x) as f32).atan2((point2_y - point1_y) as f32)
+
+}
+
 
 async fn handle_response(message: &str, game_data: Arc<RwLock<Game>>) -> Option<String> {
-    let mut v: Vec<usize> = message.split_whitespace().map(|x| x.parse().unwrap_or_default()).collect();
-    if v.len() & 1 == 1 {
+    let mut v: Vec<i32> = message.split_whitespace().map(|x| x.parse().unwrap_or_default()).collect();
+    if v.len() & 1 == 0 {
         return None;
     }
-    while v.len() >= 2 {
+    if v.len() < 2 {
+        return None;
+    }
+    let r = v.pop().unwrap_or(1) / 2;
+    let (Some(mut prev_y), Some(mut prev_x)) = (v.pop(), v.pop()) else {
+        return None;
+    };
+    if !(prev_y >= CANVAS_HEIGHT as i32 || prev_y < 0 || prev_x >= CANVAS_WIDTH as i32 || prev_x < 0) { 
+        game_data.write().await.canvases[0].data[(prev_y*CANVAS_WIDTH as i32 + prev_x) as usize] = 1;
+    }
+    while !v.is_empty() {
         let (y, x) = (v.pop(), v.pop());
         if let (Some(x), Some(y)) = (x, y) {
-            game_data.write().await.canvases[0].data[y*CANVAS_WIDTH + x] = 1;
+            let dist = distance_between(prev_x, x, prev_y, y);
+            let angle = angle_between(prev_x, x, prev_y, y);
+            for i in 0..dist {
+                let new_x = (prev_x as f32 + angle.sin() * i as f32 + 0.5) as i32;
+                let new_y = (prev_y as f32 + angle.cos() * i as f32 + 0.5) as i32;
+                for x_c in -r..r {
+                    for y_c in -r..r {
+                        let d = ((x_c*x_c + y_c * y_c) as f32).sqrt();
+                        let new_y = new_y + y_c;
+                        let new_x = new_x + x_c;
+                        if d > r as f32 || new_y >= CANVAS_HEIGHT as i32 || new_y < 0 || new_x >= CANVAS_WIDTH as i32 || new_x < 0 {
+                            continue;
+                        }
+                        game_data.write().await.canvases[0].data[(new_y * CANVAS_WIDTH as i32 + new_x) as usize] = 1;
+                    }
+                }
+            }
+            // game_data.write().await.canvases[0].data[y*CANVAS_WIDTH + x] = 1;
+            prev_x = x;
+            prev_y = y;
         }
     }
     Some("test".to_string())
