@@ -173,6 +173,7 @@ name = "garlic-phone"
 version = "0.1.0"
 dependencies = [
  "futures",
+ "rand",
  "tokio",
  "tokio-stream",
  "uuid",

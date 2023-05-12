@@ -11,3 +11,4 @@ warp = "0.3"
 tokio-stream = "0.1.6"
 futures = { version = "0.3", default-features=false }
 uuid = { version = "0.8.2", features = ["v4"] }
+rand = "0.8.5"

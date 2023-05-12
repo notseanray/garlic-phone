@@ -21,6 +21,7 @@
     const rgbString = (rgb) => {
         return "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + "," + rgb[3] + ")";
     }
+    const og_colors = ["#ffffff", "#ff0000", "#ff4000", "#ffaa00"];
     const colors = ["#ffffff", "#ff0000", "#ff4000", "#ffaa00"].map(c => hex2rgb(c));
     async function generateCircleBrush(red, green, blue, alpha, radius) {
         let data = new Array(16*radius*radius).fill(0);
@@ -59,7 +60,7 @@
     let prevY = 0;
     let currY = 0;
     let dot_flag = false;
-    let line_width = 20;
+    let line_width = 6;
     let brush_image;
     let lastScrollTop = 0;
     const redraw = () => {
@@ -182,7 +183,6 @@
             // socket.send("test");
         }
     });
-
 </script>
 
 <svelte:head>
@@ -192,11 +192,25 @@
 
 <section>
 <canvas width="600" height="480">
-  An alternative text describing what your canvas displays.
+game
 </canvas>
+{#each og_colors as c, i}
+    <button style={"background-color: " + c} on:click={() => {
+            console.log(c)
+            selected_color = i;
+        }}>
+    </button>
+{/each}
 </section>
 
 <style>
+    button {
+        height: 40px;
+        width: 40px;
+        border: none;
+        margin-left: 4px;
+        margin-right: 4px;
+    }
     canvas {
         border: 1px solid black;
         image-rendering: optimizeSpeed;
